@@ -214,12 +214,9 @@ def run_query_direct(question: str, api_key: str, aws_bucket: str = "",
     os.environ["AWS_ACCESS_KEY_ID"]       = aws_key
     os.environ["AWS_SECRET_ACCESS_KEY"]   = aws_secret
 
-    # Re-import to pick up new env vars
-    import importlib
     import agent as ag
-    import google.generativeai as genai
-    genai.configure(api_key=api_key)
-    ag.model = genai.GenerativeModel("gemini-1.5-flash")
+    from google import genai as genai_sdk
+    ag._client = genai_sdk.Client(api_key=api_key)
 
     return ag.run_agent(question)
 

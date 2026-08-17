@@ -8,10 +8,11 @@ import json
 from datetime import datetime
 from typing import Optional
 
-import google.generativeai as genai
 import pandas as pd
 import boto3
 from botocore.exceptions import NoCredentialsError, ClientError
+from google import genai
+from google.genai import types
 
 from config import (
     GEMINI_API_KEY, GEMINI_MODEL, DB_PATH,
@@ -19,9 +20,15 @@ from config import (
     S3_BUCKET, S3_PREFIX, MAX_ROWS
 )
 
-# ── Gemini setup ─────────────────────────────────────────────────────────────
-genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel(GEMINI_MODEL)
+# -- Gemini client (lazy-loaded on first use) ---------------------------------
+_client = None
+
+def get_client():
+    global _client
+    if _client is None:
+        key = GEMINI_API_KEY or os.environ.get("GEMINI_API_KEY", "")
+        _client = genai.Client(api_key=key)
+    return _client
 
 
 # ── Schema loader ─────────────────────────────────────────────────────────────
@@ -108,7 +115,10 @@ STRICT RULES:
 SQL QUERY:
 """
 
-    response = model.generate_content(prompt)
+    response = get_client().models.generate_content(
+        model=GEMINI_MODEL,
+        contents=prompt,
+    )
     raw = response.text.strip()
 
     # Clean up any accidental markdown fencing
@@ -159,7 +169,10 @@ SQL RESULT ({stats}):
 BUSINESS INSIGHT:
 """
 
-    response = model.generate_content(prompt)
+    response = get_client().models.generate_content(
+        model=GEMINI_MODEL,
+        contents=prompt,
+    )
     return response.text.strip()
 
 
