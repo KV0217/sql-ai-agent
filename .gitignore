@@ -1,0 +1,10 @@
+.env
+*.db
+*.csv
+__pycache__/
+*.pyc
+.python-version
+venv/
+.venv/
+*.joblib
+*.pkl
