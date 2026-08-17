@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: sql-ai-agent
+    env: python
+    region: singapore
+    plan: free
+    buildCommand: "pip install -r requirements.txt && python setup_db.py"
+    startCommand: "uvicorn api:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_REGION
+        value: ap-south-1
+      - key: S3_BUCKET
+        sync: false
+      - key: PYTHON_VERSION
+        value: "3.11.0"
