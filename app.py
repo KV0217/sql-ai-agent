@@ -120,20 +120,26 @@ if "last_result" not in st.session_state:
 with st.sidebar:
     st.markdown("## ⚙️ Configuration")
 
-    # Read from environment first — no input needed on Render/production
-    env_api_key = os.environ.get("GEMINI_API_KEY", "")
+    # Check st.secrets first (Streamlit Cloud), then os.environ (Render/local .env)
+    def get_secret(key):
+        try:
+            return st.secrets[key]
+        except Exception:
+            return os.environ.get(key, "")
+
+    env_api_key = get_secret("GEMINI_API_KEY")
 
     if env_api_key:
         api_key = env_api_key
-        st.success("✅ Gemini API Key loaded from environment")
+        st.success("✅ Gemini API Key loaded")
     else:
         api_key = st.text_input("🔑 Gemini API Key", type="password",
                                  help="Get free key at aistudio.google.com")
 
-    # AWS — also read from env first
-    aws_bucket = os.environ.get("S3_BUCKET", "") or st.text_input("🪣 AWS S3 Bucket (optional)")
-    aws_key    = os.environ.get("AWS_ACCESS_KEY_ID", "")
-    aws_secret = os.environ.get("AWS_SECRET_ACCESS_KEY", "")
+    # AWS creds — same pattern
+    aws_bucket = get_secret("S3_BUCKET")
+    aws_key    = get_secret("AWS_ACCESS_KEY_ID")
+    aws_secret = get_secret("AWS_SECRET_ACCESS_KEY")
 
 
     st.divider()
