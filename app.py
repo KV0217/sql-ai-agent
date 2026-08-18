@@ -119,12 +119,21 @@ if "last_result" not in st.session_state:
 with st.sidebar:
     st.markdown("## ⚙️ Configuration")
 
-    api_key = st.text_input("🔑 Gemini API Key", type="password",
-                             help="Get free key at aistudio.google.com")
-    aws_bucket = st.text_input("🪣 AWS S3 Bucket (optional)",
-                                help="Your S3 bucket name for query logging")
-    aws_key    = st.text_input("AWS Access Key ID (optional)", type="password")
-    aws_secret = st.text_input("AWS Secret Access Key (optional)", type="password")
+    # Read from environment first — no input needed on Render/production
+    env_api_key = os.environ.get("GEMINI_API_KEY", "")
+
+    if env_api_key:
+        api_key = env_api_key
+        st.success("✅ Gemini API Key loaded from environment")
+    else:
+        api_key = st.text_input("🔑 Gemini API Key", type="password",
+                                 help="Get free key at aistudio.google.com")
+
+    # AWS — also read from env first
+    aws_bucket = os.environ.get("S3_BUCKET", "") or st.text_input("🪣 AWS S3 Bucket (optional)")
+    aws_key    = os.environ.get("AWS_ACCESS_KEY_ID", "")
+    aws_secret = os.environ.get("AWS_SECRET_ACCESS_KEY", "")
+
 
     st.divider()
 
@@ -212,18 +221,24 @@ run_btn = st.button("🚀 Run Query", type="primary", use_container_width=True)
 # ── Agent runner (direct, no HTTP) ───────────────────────────────────────────
 def run_query_direct(question: str, api_key: str, aws_bucket: str = "",
                      aws_key: str = "", aws_secret: str = "") -> dict:
-    """Runs the agent directly (no FastAPI needed for Streamlit)."""
+    """Runs the agent directly using env vars (already set)."""
     import os
-    os.environ["GEMINI_API_KEY"]          = api_key
-    os.environ["S3_BUCKET"]               = aws_bucket
-    os.environ["AWS_ACCESS_KEY_ID"]       = aws_key
-    os.environ["AWS_SECRET_ACCESS_KEY"]   = aws_secret
+    # Set env vars in case they came from the sidebar
+    if api_key:
+        os.environ["GEMINI_API_KEY"] = api_key
+    if aws_bucket:
+        os.environ["S3_BUCKET"] = aws_bucket
+    if aws_key:
+        os.environ["AWS_ACCESS_KEY_ID"] = aws_key
+    if aws_secret:
+        os.environ["AWS_SECRET_ACCESS_KEY"] = aws_secret
 
     import agent as ag
     from google import genai as genai_sdk
-    ag._client = genai_sdk.Client(api_key=api_key)
+    ag._client = genai_sdk.Client(api_key=os.environ.get("GEMINI_API_KEY", ""))
 
     return ag.run_agent(question)
+
 
 
 # ── Results ───────────────────────────────────────────────────────────────────
