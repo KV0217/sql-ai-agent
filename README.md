@@ -5,8 +5,8 @@
 ## Live Deployments
 | | URL |
 |--|--|
-| **REST API** | https://sql-ai-agent-kv.onrender.com |
-| **API Docs** | https://sql-ai-agent-kv.onrender.com/docs |
+| **REST API** | https://sql-ai-agent.onrender.com |
+| **API Docs** | https://sql-ai-agent.onrender.com/docs |
 | **Streamlit App** | https://sql-ai-agent-kv.streamlit.app |
 
 > ⚡ Free tier — first request may take 30s to wake up
@@ -58,7 +58,7 @@ Logs query + result → AWS S3 (audit trail)
 
 ```
 ┌──────────────────┐    ┌────────────────────┐    ┌─────────────────┐
-│   Streamlit UI   │───▶│   Agent Pipeline   │───▶│  Gemini 1.5     │
+│   Streamlit UI   │───▶│   Agent Pipeline   │───▶│  Gemini 3.6     │
 │  (app.py)        │    │  (agent.py)        │    │  Flash (LLM)    │
 └──────────────────┘    └────────────────────┘    └─────────────────┘
          │                       │                         │
@@ -154,7 +154,7 @@ print(response.json())
 
 | Layer | Technology |
 |-------|-----------|
-| LLM | Google Gemini 1.5 Flash |
+| LLM | Google Gemini 3.6 Flash |
 | Database | SQLite (via Pandas + sqlite3) |
 | Backend | FastAPI + Uvicorn |
 | Frontend | Streamlit + Plotly |
