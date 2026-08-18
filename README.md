@@ -5,8 +5,8 @@
 ## Live Deployments
 | | URL |
 |--|--|
-| **REST API** | https://sql-ai-agent.onrender.com |
-| **API Docs** | https://sql-ai-agent.onrender.com/docs |
+| **REST API** | https://sql-ai-agent-b6gn.onrender.com |
+| **API Docs** | https://sql-ai-agent-b6gn.onrender.com/docs |
 | **Streamlit App** | https://sql-ai-agent-kv.streamlit.app |
 
 > ⚡ Free tier — first request may take 30s to wake up
@@ -103,7 +103,7 @@ uvicorn api:app --reload
 import requests
 
 response = requests.post(
-    "https://sql-ai-agent-kv.onrender.com/query",
+    "https://sql-ai-agent-b6gn.onrender.com/query",
     json={"question": "Which sub-category has the highest average discount?"}
 )
 print(response.json())
