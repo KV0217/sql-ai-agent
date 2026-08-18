@@ -1,17 +1,39 @@
 """
 api.py — FastAPI REST backend for the SQL AI Agent
 """
+import os
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import pandas as pd
 
+from config import DB_PATH
 from agent import run_agent, get_schema
+
+
+def ensure_db():
+    """Create the database if it doesn't exist."""
+    if not os.path.exists(DB_PATH):
+        print(f"[*] Database not found at '{DB_PATH}'. Creating now...")
+        import setup_db
+        setup_db.create_database()
+        print("[+] Database created successfully.")
+    else:
+        print(f"[+] Database found: {DB_PATH}")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    ensure_db()
+    yield
+
 
 app = FastAPI(
     title="SQL AI Agent — Superstore Analytics",
     description="Ask business questions in plain English. The AI writes and runs the SQL.",
     version="1.0.0",
+    lifespan=lifespan,
 )
 
 app.add_middleware(

@@ -12,6 +12,11 @@ from datetime import datetime
 
 from config import APP_TITLE, DB_PATH
 
+# Auto-create DB if missing
+if not os.path.exists(DB_PATH):
+    import setup_db
+    setup_db.create_database()
+
 # ── Page config ───────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="SQL AI Agent",
