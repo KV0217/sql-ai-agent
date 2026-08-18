@@ -1,6 +1,7 @@
 """
-agent.py — Core SQL AI Agent using Gemini + LangChain + SQLite
+agent.py — Core SQL AI Agent using Gemini + SQLite
 """
+import os
 import sqlite3
 import re
 import time
@@ -12,7 +13,6 @@ import pandas as pd
 import boto3
 from botocore.exceptions import NoCredentialsError, ClientError
 from google import genai
-from google.genai import types
 
 from config import (
     GEMINI_API_KEY, GEMINI_MODEL, DB_PATH,
@@ -29,6 +29,30 @@ def get_client():
         key = GEMINI_API_KEY or os.environ.get("GEMINI_API_KEY", "")
         _client = genai.Client(api_key=key)
     return _client
+
+
+def call_gemini(prompt: str, retries: int = 3) -> str:
+    """Call Gemini with automatic retry on SSL/network errors."""
+    last_error = None
+    for attempt in range(retries):
+        try:
+            response = get_client().models.generate_content(
+                model=GEMINI_MODEL,
+                contents=prompt,
+            )
+            return response.text.strip()
+        except Exception as e:
+            last_error = e
+            err = str(e).lower()
+            if any(x in err for x in ["ssl", "connection", "timeout", "network", "record layer"]):
+                wait = 2 ** attempt  # 1s, 2s, 4s
+                time.sleep(wait)
+                # Reset client on SSL error so it reconnects fresh
+                _client = None
+                continue
+            else:
+                raise  # Non-network error — raise immediately
+    raise RuntimeError(f"Gemini API failed after {retries} attempts: {last_error}")
 
 
 # ── Schema loader ─────────────────────────────────────────────────────────────
@@ -115,11 +139,7 @@ STRICT RULES:
 SQL QUERY:
 """
 
-    response = get_client().models.generate_content(
-        model=GEMINI_MODEL,
-        contents=prompt,
-    )
-    raw = response.text.strip()
+    raw = call_gemini(prompt)
 
     # Clean up any accidental markdown fencing
     raw = re.sub(r"```sql|```", "", raw, flags=re.IGNORECASE).strip()
@@ -169,11 +189,7 @@ SQL RESULT ({stats}):
 BUSINESS INSIGHT:
 """
 
-    response = get_client().models.generate_content(
-        model=GEMINI_MODEL,
-        contents=prompt,
-    )
-    return response.text.strip()
+    return call_gemini(prompt)
 
 
 # ── Chart type recommender ────────────────────────────────────────────────────
